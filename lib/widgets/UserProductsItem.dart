@@ -43,7 +43,7 @@ class UserProductsItem extends StatelessWidget {
                 }
               },
               icon: Icon(Icons.delete),
-              color: Theme.of(context).errorColor,
+              color: Theme.of(context).colorScheme.error,
             ),
           ],
         ),

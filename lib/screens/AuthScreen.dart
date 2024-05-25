@@ -79,8 +79,37 @@ class _AuthCardState extends State<AuthCard> {
     'email': '',
     'password': '',
   };
-  var _isLoading = false;
   final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
+
+  var _isLoading = false;
+
+  @override
+  void dispose() {
+    // Clean up the controller when the widget is disposed.
+    _passwordController.dispose();
+    _confirmPasswordController.dispose();
+    super.dispose();
+  }
+
+  void _showErrorDialog(String message) async {
+    await showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text("An Error Occurred"),
+            content: Text(message),
+            actions: <Widget>[
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: Text("Okay"),
+              ),
+            ],
+          );
+        });
+  }
 
   void _submit() async {
     final isValid = _formKey.currentState?.validate() ?? false;
@@ -88,16 +117,25 @@ class _AuthCardState extends State<AuthCard> {
       return;
     }
     _formKey.currentState?.save();
+
     setState(() {
       _isLoading = true;
     });
-    if (_authMode == AuthMode.Login) {
-      await Provider.of<Auth>(context, listen: false)
-          .logIn(_authData['email']!, _authData['password']!);
+
+    String? errorMessage =
+        await Provider.of<Auth>(context, listen: false).errorMessage;
+    if (errorMessage != null) {
+      _showErrorDialog(errorMessage);
     } else {
-      await Provider.of<Auth>(context, listen: false)
-          .signUp(_authData['email']!, _authData['password']!);
+      if (_authMode == AuthMode.Login) {
+        await Provider.of<Auth>(context, listen: false)
+            .logIn(_authData['email']!, _authData['password']!);
+      } if (_authMode == AuthMode.Signup) {
+        await Provider.of<Auth>(context, listen: false)
+            .signUp(_authData['email']!, _authData['password']!);
+      }
     }
+
     setState(() {
       _isLoading = false;
     });
@@ -165,12 +203,14 @@ class _AuthCardState extends State<AuthCard> {
                     enabled: _authMode == AuthMode.Signup,
                     decoration: InputDecoration(labelText: 'Confirm Password'),
                     obscureText: true,
+                    controller: _confirmPasswordController,
                     validator: _authMode == AuthMode.Signup
                         ? (value) {
                             if (value != _passwordController.text) {
-                              return "Password Don't match";
+                              print("Password Dosn't match");
+                              return "Password Dosn't match";
                             }
-                            return "";
+                            return null;
                           }
                         : null,
                   ),
@@ -194,7 +234,8 @@ class _AuthCardState extends State<AuthCard> {
                       )),
                 TextButton(
                   style: TextButton.styleFrom(
-                      foregroundColor: Theme.of(context).primaryColor, textStyle: TextStyle(color: Colors.brown),
+                      foregroundColor: Theme.of(context).primaryColor,
+                      textStyle: TextStyle(color: Colors.brown),
                       padding:
                           EdgeInsets.symmetric(horizontal: 30.0, vertical: 4),
                       tapTargetSize: MaterialTapTargetSize.shrinkWrap),

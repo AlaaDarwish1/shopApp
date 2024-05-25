@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
 
 import '../models/HttpException.dart';
@@ -42,6 +41,9 @@ class Products with ChangeNotifier {
     // ),
   ];
 
+  final String authToken;
+  Products(this.authToken, this._items);
+
   List<Product> get items {
     return [..._items];
   }
@@ -56,33 +58,37 @@ class Products with ChangeNotifier {
 
   Future<void> fetchAndSetProducts() async {
     Uri url = Uri.parse(
-        'https://shopappreturn-default-rtdb.asia-southeast1.firebasedatabase.app/Products.json');
-    try {
+        'https://shopappreturn-default-rtdb.asia-southeast1.firebasedatabase.app/Products.json?auth=$authToken');
+
+
       final response = await http.get(url);
-      final extractedData = json.decode(response.body) as Map<String, dynamic>;
-      final List<Product> loadedProducts = [];
-      extractedData.forEach((prodId, prodData) {
-        loadedProducts.add(Product(
-            id: prodId,
-            title: prodData['title'],
-            description: prodData['description'],
-            price: prodData['price'],
-            imageUrl: prodData['imageUrl'],
-            isFavorite: prodData['isFavorite']));
-      });
-      _items = loadedProducts;
-      notifyListeners();
-      print(json.decode(response.body));
-    } catch (error) {
-      throw (error);
-    }
+      if (response.statusCode == 200){
+        final extractedData = await json.decode(response.body) as Map<String, dynamic>;
+        final List<Product> loadedProducts = [];
+        extractedData.forEach((prodId, prodData) {
+          loadedProducts.add(Product(
+              id: prodId,
+              title: prodData['title'],
+              description: prodData['description'],
+              price: prodData['price'],
+              imageUrl: prodData['imageUrl'],
+              isFavorite: prodData['isFavorite']));
+        });
+        _items = loadedProducts;
+        notifyListeners();
+        print(json.decode(response.body));
+      } else {
+        throw Exception("Faild to load ...");
+      }
+
+
   }
 
   Future addProduct(String id, Product product) async {
     final productIndex = _items.indexWhere((element) => element.id == id);
     if (productIndex >= 0) {
       await http.patch(
-          'https://shopappreturn-default-rtdb.asia-southeast1.firebasedatabase.app/Products/$id.json'
+          'https://shopappreturn-default-rtdb.asia-southeast1.firebasedatabase.app/Products/$id.json?auth=$authToken'
               as Uri,
           body: jsonEncode({
             'title': product.title,
@@ -94,7 +100,7 @@ class Products with ChangeNotifier {
     } else {
       print("object");
       Uri url = Uri.parse(
-          'https://shopappreturn-default-rtdb.asia-southeast1.firebasedatabase.app/Products.json');
+          'https://shopappreturn-default-rtdb.asia-southeast1.firebasedatabase.app/Products.json?auth=$authToken');
       try {
         final response = await http.post(
           url,
@@ -129,7 +135,7 @@ class Products with ChangeNotifier {
 
   Future<void> deleteProduct(String id) async {
     Uri url = Uri.parse(
-        'https://shopappreturn-default-rtdb.asia-southeast1.firebasedatabase.app/Products/$id.json');
+        'https://shopappreturn-default-rtdb.asia-southeast1.firebasedatabase.app/Products/$id.json?auth=$authToken');
 
     final existingProductIndex = _items.indexWhere((prod) => prod.id == id);
     Product? existingProduct = _items[existingProductIndex];

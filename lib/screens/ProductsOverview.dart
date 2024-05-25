@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:provider/provider.dart';
 import 'package:shop_app_return/screens/CartDetail.dart';
 import 'package:shop_app_return/widgets/AppDrawer.dart';
-import 'package:shop_app_return/widgets/Badge.dart';
+import 'package:shop_app_return/widgets/Badge.dart' as bg;
 
 import '../providers/Cart.dart';
 import '../providers/Products.dart';
@@ -62,7 +61,7 @@ class _ProductsOverviewState extends State<ProductsOverview> {
         centerTitle: true,
         actions: <Widget>[
           Consumer<Cart>(
-            builder: (_, cart, ch) => Badge(
+            builder: (_, cart, ch) => bg.Badge(
                 value: cart.itemCount.toString(),
                 color: Colors.deepOrange,
                 child: ch!),
