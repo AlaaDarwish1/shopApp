@@ -44,7 +44,7 @@ class ProductItem extends StatelessWidget {
             // the child keyword is used to prevent a widget from rebuilding when a widget of the Consumer rebuilds
             builder: (context, product, child) => IconButton(
               onPressed: () {
-                product.toggleFavoriteStatus(authData.token.toString());
+                product.toggleFavoriteStatus(authData.token.toString(), authData.userId);
               },
               icon: Icon(
                   product.isFavorite ? Icons.favorite : Icons.favorite_border),
