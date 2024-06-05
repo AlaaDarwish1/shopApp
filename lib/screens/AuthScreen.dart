@@ -123,16 +123,18 @@ class _AuthCardState extends State<AuthCard> {
     });
 
     String? errorMessage =
-        await Provider.of<Auth>(context, listen: false).errorMessage;
+        Provider.of<Auth>(context, listen: false).errorMessage;
     if (errorMessage != null) {
       _showErrorDialog(errorMessage);
     } else {
-      if (_authMode == AuthMode.Login) {
-        await Provider.of<Auth>(context, listen: false)
-            .logIn(_authData['email']!, _authData['password']!);
-      } if (_authMode == AuthMode.Signup) {
-        await Provider.of<Auth>(context, listen: false)
-            .signUp(_authData['email']!, _authData['password']!);
+      if (context.mounted){
+        if (_authMode == AuthMode.Login) {
+          await Provider.of<Auth>(context, listen: false)
+              .logIn(_authData['email']!, _authData['password']!);
+        } if (_authMode == AuthMode.Signup) {
+          await Provider.of<Auth>(context, listen: false)
+              .signUp(_authData['email']!, _authData['password']!);
+        }
       }
     }
 
