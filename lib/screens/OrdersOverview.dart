@@ -42,7 +42,7 @@ class _OrdersOverviewState extends State<OrdersOverview> {
               );
             } else {
               if (dataSnapshot.error != null) {
-                return Center(child: Text("An Error Occured"));
+                return Center(child: Text("Your cart is empty"));
               } else {
                 return Consumer<Orders>(
                   builder: (context, orderData, child) => ListView.builder(

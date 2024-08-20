@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shop_app_return/providers/Auth.dart';
 import 'package:shop_app_return/screens/CartDetail.dart';
 import 'package:shop_app_return/widgets/AppDrawer.dart';
 import 'package:shop_app_return/widgets/Badge.dart' as bg;
-
 import '../providers/Cart.dart';
 import '../providers/Products.dart';
 import '../widgets/ProductsGrid.dart';
@@ -35,22 +35,26 @@ class _ProductsOverviewState extends State<ProductsOverview> {
 
   @override
   void initState() {
+    super.initState();
     if (isInit) {
+      isInit = false;
       setState(() {
         isLoading = true;
-        Future.delayed(Duration.zero)
-            .then((_) => Provider.of<Products>(context, listen: false)
-                .fetchAndSetProducts())
-            .then((_) {
-          setState(() {
-            isLoading = false;
-          });
-        });
+      });
+      Future.microtask(() async {
+        try {
+          await Provider.of<Products>(context, listen: false).fetchAndSetProducts();
+        } catch (error) {
+          print("Failed to load products");
+        } finally {
+          if (mounted) {
+            setState(() {
+              isLoading = false;
+            });
+          }
+        }
       });
     }
-    isInit = false;
-
-    super.initState();
   }
 
   @override

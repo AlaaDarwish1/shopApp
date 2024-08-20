@@ -10,9 +10,6 @@ class ProductItem extends StatelessWidget {
   ProductItem({
     Key? key,
   }) : super(key: key);
-  // final String id;
-  // final String title;
-  // final String imageUrl;
 
   @override
   Widget build(BuildContext context) {

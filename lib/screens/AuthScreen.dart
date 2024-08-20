@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shop_app_return/providers/Auth.dart';
 
+import 'ProductsOverview.dart';
+
 enum AuthMode { Signup, Login }
 
 class AuthScreen extends StatelessWidget {
@@ -84,6 +86,7 @@ class _AuthCardState extends State<AuthCard> {
 
   var _isLoading = false;
 
+
   @override
   void dispose() {
     // Clean up the controller when the widget is disposed.
@@ -92,23 +95,23 @@ class _AuthCardState extends State<AuthCard> {
     super.dispose();
   }
 
-  void _showErrorDialog(String message) async {
-    await showDialog(
+  void _showErrorDialog(String message) {
+     showDialog(
         context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
+        builder: (context) =>
+          AlertDialog(
             title: Text("An Error Occurred"),
             content: Text(message),
             actions: <Widget>[
               TextButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
+                onPressed: () =>
+                  Navigator.of(context).pop()
+                ,
                 child: Text("Okay"),
               ),
             ],
-          );
-        });
+          ),
+        );
   }
 
   void _submit() async {
@@ -124,9 +127,15 @@ class _AuthCardState extends State<AuthCard> {
 
     String? errorMessage =
         Provider.of<Auth>(context, listen: false).errorMessage;
+
     if (errorMessage != null) {
-      _showErrorDialog(errorMessage);
-    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(errorMessage),
+        ),
+      );
+      print('${_authData['password']} sth ${_authData['email']}');
+    }
       if (context.mounted){
         if (_authMode == AuthMode.Login) {
           await Provider.of<Auth>(context, listen: false)
@@ -136,7 +145,7 @@ class _AuthCardState extends State<AuthCard> {
               .signUp(_authData['email']!, _authData['password']!);
         }
       }
-    }
+
 
     setState(() {
       _isLoading = false;
@@ -183,7 +192,10 @@ class _AuthCardState extends State<AuthCard> {
                     return null;
                   },
                   onSaved: (value) {
-                    _authData['email'] = value!;
+                    setState(() {
+                      _authData['email'] = value!;
+                    });
+
                   },
                 ),
                 TextFormField(
@@ -229,7 +241,7 @@ class _AuthCardState extends State<AuthCard> {
                               horizontal: 30, vertical: 8.0),
                           shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(30))),
-                      onPressed: _submit,
+                      onPressed:  _submit,
                       child: Text(
                         _authMode == AuthMode.Login ? "Login" : "Signup",
                         style: TextStyle(color: Colors.white),

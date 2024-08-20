@@ -1,15 +1,13 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-
 import '../models/HttpException.dart';
 import 'Product.dart';
 
 class Products with ChangeNotifier {
   List<Product> _items = [];
-
   final String authToken;
-  final String userId;
+  final String? userId;
   Products(this.authToken, this._items, this.userId);
 
   List<Product> get items {
@@ -24,11 +22,11 @@ class Products with ChangeNotifier {
     return _items.firstWhere((element) => element.id == id);
   }
 
-  Future<void> fetchAndSetProducts() async {
+  Future<void> fetchAndSetProducts({String? updateToken, String? updateUserId, bool filterByUser = false}) async {
+    final filterString = filterByUser ? 'orderBy="creatorId"&equalTo="$userId"' : '';
     Uri url = Uri.parse(
-        'https://shopappreturn-default-rtdb.asia-southeast1.firebasedatabase.app/Products.json?auth=$authToken');
-
-
+        'https://shopappreturn-default-rtdb.asia-southeast1.firebasedatabase.app/Products.json?auth=$authToken&$filterString');
+      print("Products class.User ID: $userId");
       final response = await http.get(url);
       if (response.statusCode == 200){
         final extractedData = await json.decode(response.body) as Map<String, dynamic>;
@@ -48,29 +46,27 @@ class Products with ChangeNotifier {
         });
         _items = loadedProducts;
         notifyListeners();
-        print(json.decode(response.body));
+        print("Products class JSON RESPONSE: ${json.decode(response.body)}");
       } else {
-        throw Exception("Faild to load ...");
+        throw Exception("Products class Faild to load ...");
       }
-
-
   }
 
   Future addProduct(String id, Product product) async {
     final productIndex = _items.indexWhere((element) => element.id == id);
     if (productIndex >= 0) {
       await http.patch(
-          'https://shopappreturn-default-rtdb.asia-southeast1.firebasedatabase.app/Products/$id.json?auth=$authToken'
-              as Uri,
+          Uri.parse(
+              'https://shopappreturn-default-rtdb.asia-southeast1.firebasedatabase.app/Products/$id.json?auth=$authToken'),
           body: jsonEncode({
             'title': product.title,
             'imageUrl': product.imageUrl,
-            'description': product.description
+            'description': product.description,
+            'creatorId': userId,
           }));
       _items[productIndex] = product;
       notifyListeners();
     } else {
-      print("object");
       Uri url = Uri.parse(
           'https://shopappreturn-default-rtdb.asia-southeast1.firebasedatabase.app/Products.json?auth=$authToken');
       try {
@@ -81,6 +77,7 @@ class Products with ChangeNotifier {
             'description': product.description,
             'imageUrl': product.imageUrl,
             'price': product.price,
+            'creatorId': userId,
           }),
         );
 
@@ -94,12 +91,12 @@ class Products with ChangeNotifier {
           );
           _items.add(newProduct);
           notifyListeners();
-          print('Product added successfully: ${newProduct.id}');
+          print('Products class.Product added successfully: ${newProduct.id}');
         } else {
-          print('Failed to add product. Status code: ${response.statusCode}');
+          print('Products class.Failed to add product. Status code: ${response.statusCode}');
         }
       } catch (error) {
-        print('Error adding product: $error');
+        print('Products class.Error adding product: $error');
       }
     }
   }
@@ -107,13 +104,11 @@ class Products with ChangeNotifier {
   Future<void> deleteProduct(String id) async {
     Uri url = Uri.parse(
         'https://shopappreturn-default-rtdb.asia-southeast1.firebasedatabase.app/Products/$id.json?auth=$authToken');
-
     final existingProductIndex = _items.indexWhere((prod) => prod.id == id);
     Product? existingProduct = _items[existingProductIndex];
     _items.removeAt(existingProductIndex);
     notifyListeners();
     final response = await http.delete(url);
-
     if (response.statusCode >= 400) {
       _items.insert(existingProductIndex, existingProduct);
       notifyListeners();

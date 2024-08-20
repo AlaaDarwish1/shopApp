@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import 'package:shop_app_return/screens/EditUserProducts.dart';
 import 'package:shop_app_return/widgets/AppDrawer.dart';
 import 'package:shop_app_return/widgets/UserProductsItem.dart';
-
 import '../providers/Products.dart';
 
 class UserProducts extends StatelessWidget {
@@ -11,12 +10,11 @@ class UserProducts extends StatelessWidget {
   static const routeName = "UserProducts";
 
   Future<void> _refreshProducts(BuildContext ctx) async {
-    await Provider.of<Products>(ctx, listen: false).fetchAndSetProducts();
+    await Provider.of<Products>(ctx, listen: false).fetchAndSetProducts(filterByUser: true);
   }
 
   @override
   Widget build(BuildContext context) {
-    final productsData = Provider.of<Products>(context);
     return Scaffold(
       appBar: AppBar(
         title: const Text("Products Manager"),
@@ -30,26 +28,30 @@ class UserProducts extends StatelessWidget {
           ),
         ],
       ),
-      body: RefreshIndicator(
-        onRefresh: () => _refreshProducts(context),
-        child: Padding(
-          padding: EdgeInsets.all(8),
-          child: ListView.builder(
-            itemBuilder: (_, i) => Column(
-              children: [
-                UserProductsItem(
-                  id: productsData.items[i].id,
-                  title: productsData.items[i].title,
-                  imageUrl: productsData.items[i].imageUrl,
+      // the user will Work only on the product the user owns
+      body: FutureBuilder(
+        future: _refreshProducts(context),
+        builder: (ctx, snapshot) => snapshot.connectionState == ConnectionState.waiting ? Center(child: CircularProgressIndicator(),)  : RefreshIndicator(
+          onRefresh: () => _refreshProducts(context),
+          child: Consumer <Products>(
+            builder: (ctx, productsData, _) => Padding(
+              padding: EdgeInsets.all(8),
+              child: ListView.builder(
+                itemBuilder: (_, i) => Column(
+                  children: [
+                    UserProductsItem(
+                      id: productsData.items[i].id,
+                      title: productsData.items[i].title,
+                      imageUrl: productsData.items[i].imageUrl,
+                    ),
+                    const Divider(
+                      thickness: 2,
+                    ),
+                  ],
                 ),
-                Divider(
-                  // indent: 50,
-                  // endIndent: 50,
-                  thickness: 2,
-                ),
-              ],
+                itemCount: productsData.items.length,
+              ),
             ),
-            itemCount: productsData.items.length,
           ),
         ),
       ),
